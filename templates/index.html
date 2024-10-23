@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clonar Proyecto de GitHub</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            flex: 1;
+            padding: 20px;
+        }
+        .alert {
+            display: none;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            position: relative;
+            z-index: 1;
+        }
+        .alert-info {
+            background-color: #d1ecf1; /* Azul claro para archivos originales */
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        .alert-success {
+            background-color: #d4edda; /* Verde claro para archivos convertidos a .txt */
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .progress {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 4px;
+            overflow: hidden;
+            height: 20px;
+            margin-top: 15px;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: #007bff; /* Color azul para la barra de progreso */
+            transition: width 0.4s ease;
+        }
+        .progress-label {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 20px; /* Alinea verticalmente el texto */
+            color: white;
+            font-weight: bold;
+        }
+        footer {
+            margin-top: auto; /* Empuja el pie de página hacia abajo */
+            padding: 20px;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Descargar Proyecto desde GitHub</h1>
+        <form id="formDescargar" action="/descargar" method="POST">
+            <label for="url_github">URL del repositorio de GitHub:</label>
+            <input type="text" id="url_github" name="url_github" required placeholder="https://github.com/usuario/proyecto.git">
+            
+            <label for="tipo_descarga">Tipo de descarga:</label>
+            <select id="tipo_descarga" name="tipo_descarga">
+                <option value="original">Archivos originales</option>
+                <option value="txt">Todos los archivos en .txt</option>
+            </select>
+
+            <button type="submit">Descargar</button>
+        </form>
+
+        <div id="mensaje" class="alert"></div>  <!-- Mensaje de éxito -->
+    </div>
+
+    <footer>
+        <div class="progress" id="barraProgreso" style="display:none;">
+            <div class="progress-bar" id="barra">
+                <div class="progress-label" id="label">0%</div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            $('#formDescargar').on('submit', function(event) {
+                event.preventDefault(); // Previene el comportamiento por defecto
+                $('#barraProgreso').hide(); // Oculta la barra de progreso al inicio
+                $('#mensaje').hide(); // Oculta el mensaje al inicio
+
+                $.post($(this).attr('action'), $(this).serialize(), function(data) {
+                    // Establece el color del mensaje según el tipo de descarga
+                    if (data.tipo === 'original') {
+                        $('#mensaje').removeClass('alert-success').addClass('alert-info');
+                    } else if (data.tipo === 'txt') {
+                        $('#mensaje').removeClass('alert-info').addClass('alert-success');
+                    }
+
+                    $('#mensaje').html(data.mensaje).fadeIn(); // Mostrar el mensaje
+
+                    // Si no fue descargado anteriormente, muestra la barra de progreso
+                    if (!data.mensaje.includes("ya descargado")) {
+                        $('#barraProgreso').show(); // Muestra la barra de progreso
+                        $('#barra').css('width', '100%'); // Completa la barra de progreso
+                        $('#label').text('100%'); // Actualiza el texto
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
